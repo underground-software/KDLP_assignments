@@ -1,0 +1,3 @@
+dmesg log:
+[82268.855004] I'm like hey what's up hello
+[82326.653916] I be in the kitchen cooking pies

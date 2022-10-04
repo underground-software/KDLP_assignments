@@ -1,0 +1,12 @@
+[ari@fedora ari_primak]$ dmesg -H | tail
+[  +0.010079] Service: Seamless
+[  +0.023412] Service: Drag and Drop (DnD)
+[  +1.564310] Worker loop running
+[  +0.024606] Proxy window=12582913, root window=1309 ...
+[  +0.002076] Started
+[  +0.000205] 6.1.38_Fedorar153438
+[Oct 4 08:39] hello: loading out-of-tree module taints kernel.
+[  +0.000025] hello: module verification failed: signature and/or required key missing - tainting kernel
+[  +0.000309] here comes dat boi
+[Oct 4 08:40] oh shit waddup
+[ari@fedora ari_primak]$

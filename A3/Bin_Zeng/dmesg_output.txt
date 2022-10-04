@@ -1,0 +1,5 @@
+[143406.428102] Bin_Zeng_A3 module initialize:
+[143406.428105] -Daddy, what are clouds made of?
+[143406.428106] -Linux servers, mostly.
+[143414.089024] Bin_Zeng_A3 module exit:
+[143414.089028] I have to admit I copied this joke online...

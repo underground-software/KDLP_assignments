@@ -1,0 +1,6 @@
+kpatel@kpatel-VirtualBox:~/KDLP_fall2022/A3/kush_patel$ sudo insmod testmodule.ko
+kpatel@kpatel-VirtualBox:~/KDLP_fall2022/A3/kush_patel$ sudo rmmod testmodule.ko
+kpatel@kpatel-VirtualBox:~/KDLP_fall2022/A3/kush_patel$ sudo dmesg
+[ 3200.839005] Whats the difference between a virus and Windows 11?
+[ 3203.917790] Viruses rarely fail
+kpatel@kpatel-VirtualBox:~/KDLP_fall2022/A3/kush_patel$

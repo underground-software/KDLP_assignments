@@ -1,0 +1,10 @@
+[  +0.000262] audit: type=1400 audit(1665087744.067:133): apparmor="DENIED" operation="mkdir" profile="snap-update-ns.firefox" name="/usr/share/gimp/2.0/" pid=4793 comm="6" requested_mask="c" denied_mask="c" fsuid=0 ouid=0
+[  +0.000290] audit: type=1400 audit(1665087744.067:134): apparmor="DENIED" operation="mkdir" profile="snap-update-ns.firefox" name="/usr/share/libreoffice/help/" pid=4793 comm="6" requested_mask="c" denied_mask="c" fsuid=0 ouid=0
+[  +0.000162] audit: type=1400 audit(1665087744.067:135): apparmor="DENIED" operation="open" profile="snap-update-ns.firefox" name="/var/lib/" pid=4793 comm="6" requested_mask="r" denied_mask="r" fsuid=0 ouid=0
+[Oct 6 17:16] hello: loading out-of-tree module taints kernel.
+[  +0.000029] hello: module verification failed: signature and/or required key missing - tainting kernel
+[  +0.000098] Hello, world
+[Oct 6 17:19] Goodbye, cruel world
+[Oct 6 17:29] What do Karl Marx and the founder of linux have in common?
+[  +0.000005] They both hate classes
+[Oct 6 17:30] Goodbye, cruel world

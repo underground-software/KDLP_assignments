@@ -1,1 +1,1 @@
-# Scavenger Hunt 🤪
+# Scavenger Hunt 🔎

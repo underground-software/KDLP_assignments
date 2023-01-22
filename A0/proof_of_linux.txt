@@ -1,0 +1,1 @@
+Linux fedora 6.0.7-301.fc37.x86_64 #1 SMP PREEMPT_DYNAMIC Fri Nov 4 18:35:48 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux

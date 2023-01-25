@@ -1,1 +1,0 @@
-Linux jahada.eq.by 6.1.6-200.fc37.aarch64 #1 SMP PREEMPT_DYNAMIC Sat Jan 14 16:36:00 UTC 2023 aarch64 aarch64 aarch64 GNU/Linux

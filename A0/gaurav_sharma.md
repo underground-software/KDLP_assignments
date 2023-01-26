@@ -1,0 +1,1 @@
+Hi! My name is Gaurav Sharma. I am a masters student at the university of utah. I have previously worked with Linux device driver development at MediaTek and Qualcomm and want to gain more knowledge in this domain. In my spare time, I like working out and playing video games.

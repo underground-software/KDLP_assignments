@@ -1,0 +1,1 @@
+ I am currently a student at KLE Technological University, pursuing a BE degree in Electronics and Communication. I am in my second year of study and have been working on my coding skills and linux skills, I have done projects and participated in hackathons.

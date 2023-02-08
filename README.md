@@ -8,7 +8,7 @@
 
 <https://kdlp.underground.software/A1.html>
 
-**Base 0**
+###### Base 0
 
 * Patches apply
 * Warnings enabled
@@ -16,7 +16,7 @@
 * Levels completed
 * Compiles without errors or warnings
 
-**Base 1**
+###### Base 1
 
 * Correctness of completed levels
 * No memory leaks

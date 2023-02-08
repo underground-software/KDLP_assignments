@@ -16,7 +16,7 @@
 * Levels completed
 * Compiles without errors or warnings
 
-** Base 1**
+**Base 1**
 
 * Correctness of completed levels
 * No memory leaks

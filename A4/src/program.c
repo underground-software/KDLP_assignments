@@ -18,7 +18,7 @@
 
 int main(void)
 {
-	int pw_fd = open(PASSWORD_FILE, O_RDONLY);
+	int pw_fd = openat(AT_FDCWD, PASSWORD_FILE, O_RDONLY);
 	if(0 > pw_fd)
 		ERROR("unable to open " PASSWORD_FILE);
 
@@ -50,7 +50,7 @@ int main(void)
 	static char prog_info_buffer[256] = {0};
 	size_t prog_info_len = get_prog_data(sizeof prog_info_buffer, prog_info_buffer, rand_byte, now.tv_sec, pid);
 
-	int log_fd = open(LOG_FILE, O_RDWR | O_CREAT, 0600);
+	int log_fd = openat(AT_FDCWD, LOG_FILE, O_RDWR | O_CREAT, 0600);
 	if(0 > log_fd)
 		ERROR("unable to open " LOG_FILE);
 	if(-1 == lseek(log_fd, 0, SEEK_END))

@@ -1,0 +1,23 @@
+demo device operation 0: init
+demo device operation 1: open of file number 1
+demo device operation 2: llseek of file number 1
+demo device operation 3: read of file number 1
+demo device operation 4: write of file number 1
+demo device operation 5: write of file number 1
+demo device operation 6: open of file number 6
+demo device operation 7: write of file number 6
+demo device operation 8: read of file number 6
+demo device operation 9: ioctl of file number 6
+demo device operation 10: write of file number 6
+demo device operation 11: read of file number 6
+demo device operation 12: ioctl of file number 6
+demo device operation 13: write of file number 1
+demo device operation 14: release of file number 6
+demo device operation 15: open of file number 15
+demo device operation 16: write of file number 15
+demo device operation 17: read of file number 15
+demo device operation 18: llseek of file number 15
+demo device operation 19: release of file number 1
+demo device operation 20: read of file number 15
+demo device operation 21: release of file number 15
+demo device operation 22: exit

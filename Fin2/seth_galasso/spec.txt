@@ -1,0 +1,108 @@
+Stack Character Device
+
+This character device will behave like a character stack, where characters and pushed in and popped
+out in a first-in first-out (FIFO) manner. Pushing behavior will be delegated to the function
+`write()`, while popping behavior will be delegated to `read()`.
+
+The stack will have a fixed capacity of 50 characters.
+
+The device will appear in `/dev/` as a special character device file named `stack`. All users can
+interact with the stack, and the stack's state is shared between all open file descriptors.
+
+The character device file supports the operations `open`, `close`, `read`, `write`, `lseek`, and
+`ioctl`. When the kernel module is loaded, the driver should begin with an empty stack.
+
+Operations:
+	- `open()`:
+		- This intializes any internal data structures needed by the developer.
+		- All `open()` calls must place the file pointer at the top of stack at the time
+		of the call.
+			- Another open file may have already placed elements in the stack.
+
+	- `read()`:
+		- This will pop off a certain number of elements from the character stack based on
+		the given user input.
+		- The minimum between the number of pops requested and the amount of data available
+		will be copied into the given user buffer *in FIFO order*.
+			- Ex) If the stack contains "abcd" and the user requests to pop 4 elements,
+			the user buffer will contain "dcba".
+		- On success, return the number of bytes copied to userspace.
+		- Otherwise, return a negative error code.
+		- If the file currently points to an invalid location (see the notes at the bottom),
+		then also do nothing and return a negative error code.
+
+	- `write()`:
+		- This pushes `count` characters from the provided user string onto the stack.
+			- If `count` exceeds the amount of space on the stack (say N), only push the
+			first N characters of the user string.
+		- On success, return the number of bytes copied to kernel space.
+		- Otherwise, return a negative error code.
+		- If the file currently points to an invalid location (see the notes at the bottom),
+		then also do nothing and return a negative error code.
+
+	- `lseek()`:
+		- Update the current top-of-stack based on `offset` and `whence`, allowing the user
+		to disobey the stack discipline.
+		- Seeking to the offset 0 places the file at the very beginning of the stack, where
+		no characters can be popped.
+		- SEEK_SET and SEEK_CUR behave as usual. SEEK_END seeks from the end of the 50
+		character buffer.
+		- If the resulting position is outside of the current stack, return `-EINVAL`.
+		- Otherwise, update the file position accordingly and return the new offset.
+
+	- `ioctl()`:
+		- The user may specify one of three commands. Return `-EINVAL` otherwise.
+		- `IOC_STACK_TO_TOP` (macro with value of `_IO(0x11, 0)`)
+			- Takes no arguments, returns 0 on success, and a negative error on failure.
+			- This places the file pointer to the current top-of-stack.
+			- It may be used to fix invalidated file descriptors like the one described
+			in the notes.
+		- `IOC_STACK_PEEK` (macro with value of `_IO(0x11, 1, sizeof(char))`)
+			- Provides the current character at the top of the stack, if it's valid.
+			- Takes the address of a character as an argument which is to store the
+			current top of stack.
+			- If the current stack is empty, place the NULL character (`\0`) in the
+			provided address.
+			- Return a negative error code if the top of stack is not valid.
+			- Otherwise, return 0.
+		- `IOC_STACK_GET_SIZE` (macro with value of `_IO(0x11, 2, sizeof(size_t))`)
+			- Provides the current size of the stack.
+			- Takes the address of a `size_t` which is to store the size.
+			- Return a negative error on failure.
+			- Otherwise, return 0.
+
+Additional Notes:
+Because of the nature of this stack, where multiple files may interact with different parts of it
+concurrently, some strange behavior may occur. Take the following scenario: the first row
+represents the current offset of a file, and the second row repesents the stack contents (such that
+the stack grows from left to right).
+
+	- Initial State
+|--------------------------------------------------------------------------------------------------|
+|     | F1  |     | F2  |     |     |     |     | ...                                              |
+|--------------------------------------------------------------------------------------------------|
+| 'H' | 'E' | 'L' | 'L' | 'O' |     |     |     | ...                                              |
+|--------------------------------------------------------------------------------------------------|
+
+	- F1 reads a single character (popping one element off the stack). F2's top has changed, but
+	is still valid as it still points to a character.
+|--------------------------------------------------------------------------------------------------|
+| F1  |     |     | F2  |     |     |     |     | ...                                              |
+|--------------------------------------------------------------------------------------------------|
+| 'H' | 'L' | 'L' | 'O' |     |     |     |     | ...                                              |
+|--------------------------------------------------------------------------------------------------|
+
+	- F1 reads a single character (popping another element). F1's relative stack is now empty,
+	and F2 *no longer points to a valid element*.
+   |-----------------------------------------------------------------------------------------------|
+F1 |     |     |     | F2  |     |     |     |     | ...                                           |
+   |-----------------------------------------------------------------------------------------------|
+   | 'L' | 'L' | 'O' |     |     |     |     |     | ...                                           |
+   |-----------------------------------------------------------------------------------------------|
+
+The state of F2 here is an example of the invalid state referenced in the operations section. Most
+operations on F2 will return an error at this point; F2 can be put back into a valid state either:
+	- Through a call to `ioctl()` using `IOC_STACK_TO_TOP` (which would move F2 back one unit
+	in this case).
+	- Or if F1 pushes another character (This would shift "LLO" forward one unit, putting the
+	stack into a similar state as it was in the middle diagram).

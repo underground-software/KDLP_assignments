@@ -1,0 +1,97 @@
+Kernel Connect 4
+
+This character device allows users to play the classic tabletop game connect 4.
+The device keeps track of the current board state and allows the game either be
+played by two human players, or a human player playing against an agent that
+makes random moves. The player(s) play the game by writing a single number to
+the device file. The game is played on a 6 row by 7 column grid. Tokens are
+placed into the grid by selecting a column and dropping a token into that
+column. The token falls to the lowest unoccupied row in the grid. Once 4 tokens
+are connected in a vertical, horizontal, or diagonal line, the player whose
+tokens have been aligned wins and the game finishes. If the board is full
+and no 4 tokens of the same kind are in line, the game ends in a draw.
+
+The device will show up in the `/dev/` directory as `/dev/connect4.` The game
+will share one single state across all open file descriptors, and any process
+can interact with the file. Upon module load, the board is set to be empty and
+it is player 1's turn to place a token.
+
+This device supports the following operations:
+- Open
+	- Opens a file descriptor for the calling program to interact with the
+	driver.
+	- All file descriptors will interact with a single shared board state.
+	- Return a negative error number on fail.
+- Close
+	- Close a file descriptor
+- Read
+	- Read the current board state as ascii art into a userspace buffer.
+	Unoccupied spaces on the grid will be represented by the character `.`,
+	spaces taken by the first player will be represented by `1`, and player
+	2 spaces will be shown with `2`.
+	- Below the current board state, one of the following strings will
+	be displayed. `Player 1's Turn`/`Player 2's Turn` if it is either
+	player's turn, or `Player 1 Won!`/`Player 2 Won!`/`Draw!` if one of
+	the players has won/the game has completed with no winners.
+	- The "file contents" consist of both the ascii art and the status
+	message underneath. A complete read of the driver will include both the
+	art and the message.
+	- Reads the minimum of the number of bytes requested and how many
+	bytes are available for reading from the current file position. For
+	example, If 10 bytes are requested and only 5 bytes remain from the
+	current file position to the end of the file, only those 5 bytes are
+	provided. If 20 bytes remain and 30 are requested, only 20 are provided.
+	- This read starts from the current file position.
+	- Successful reads advance the file position by the number of bytes
+	read and return the number of bytes read.
+	- Failed reads return the appropriate negative error number.
+- Write:
+	- Used to place tokens into the board.
+	- To place a token, the player writes a single character: a number from
+	1-7. One of that player's tokens will then be placed in the
+	corresponding column.
+	- The device expects only a single character. If a larger string is
+	provided, the device will only read the first character from that buffer
+	and ignore the rest.
+	- If it is player 1's turn, a player 1 token is placed into that column.
+	On player 2's turn, a player 2 token is placed. It will then be the
+	next player's turn once the write is finished.
+	- A successful write will return the complete length of the string
+	provided. Failed writes return a negative error number.
+	- Successful writes reset the file position to 0. Failed writes do not.
+	- If the player writes an invalid character, it is still that player's
+	turn, nothing is written, and a negative error number is returned.
+- Seek:
+	- Update the file position based on `offset` and `whence`.
+	- Requests to seek to an out of bounds position return a negative error
+	number.
+	- Valid requests seek to the appropriate position and the offset is
+	returned.
+- Ioctl:
+	- Supports these three commands, otherwise `-EINVAL` is returned.
+	- `IOC_CONNECT_RESET` (macro with value `_IO(0x11, 0)`)
+		- Clears board and sets it to player 1's turn.
+		- Expects no arguments
+		- Returns 0 on success, negative error on failure.
+	- `IOC_CONNECT_SET_AI` (macro with value `_IO(0x11, 1, int)`)
+		- Switches player 2 between being ai controlled and human
+		controlled. In ai mode, after each of player 1's moves a random
+		move is selected for player 2. it will then be player 1's turn
+		again.
+		- The "ai" agent is by no means intelligent - it simply makes
+		random moves.
+		- Expects an `int` argument. If that argument is any non-zero
+		number, the game will be set to ai mode. If the argument is
+		zero, the game is set to two human player mode.
+		- If the user tries to set the mode to the mode the game is
+		already in, nothing happens and a negative error number is
+		returned.
+		- When the mode is switched from one setting to the other,
+		the board is reset and 1 is returned. Much like the reset ioctl,
+		the game is set to player 1's turn on successful reset.
+		- If something goes wrong, a negative error number is returned.
+	- `IOC_CONNECT_GET_LENGTH` (macro with value `_IOR(0x11, 2, size_t)`)
+		- Returns the length of string that represents the board state
+		and the message below the board.
+		- Expects a `size_t` address argument to put that length into.
+		- Returns the length on success, negative error number on fail.

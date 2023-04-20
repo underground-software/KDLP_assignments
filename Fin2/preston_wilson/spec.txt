@@ -1,0 +1,98 @@
+Kernel Hangman
+
+This driver implements a character device for playing the game of hangman. The
+goal of the game is to determine the mystery word by guessing a letter each
+turn. The user will be able to guess the word as well but will be penalized if
+it is wrong indicated by a lost limb.
+
+On load, a new random word is generated from a preset list of possible words
+and the hangman is reset to have all of their limbs.
+
+The device will show up in the '/dev' directory as '/dev/hangman'. The game
+state is shared between all open file descriptors as well.
+
+The device supports the following operations:
+Read
+    -Read the current state of hangman and how many letters correctly guessed
+    -Letters not guessed are hidden by a '_' character
+    -Display current game space as ascii art
+        e.g. is at bottom of spec
+    -Return number of turns left
+        "You have _ tries left..."
+    -Win or lose status when number of tries = 0 or word is correctly solved
+        e.g. "YOU SAVED THE STICKMAN! GOOD JOB!!!"
+Write
+    -Used to guess a letter or even a word
+    -User types in a single letter and is compared with the word in play
+    -One character is expected so anything greater than one will simply be
+        ignored
+    -The list of accepted letters include
+        [a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z]
+        anything else will be an invalid guess so the player will be
+        prompted to guess again without a penalty
+        -A negative error number is returned if invalid
+Seek
+    -Manipulates the file position between subsequent reads
+Ioctl
+    -'IOC_HANGMAN_RESET' _IO(0x11,0)
+        -Command to reset game state and generate new word
+        -Expects no arguements
+        -Return 0 on success, -1 on failure
+    -'IOC_HANGMAN_GUESS' _IO(0x11,1)
+        -Command that allows the user to guess the word
+        -Expects a character array symbolizing the user's guess for the word
+Open
+    -Opens a file descriptor
+Close
+    -Closes a file descriptor
+
+Art for game:
+  +---+
+  |   |
+      |
+      |
+      |
+      |
+=========
+  +---+
+  |   |
+  O   |
+      |
+      |
+      |
+=========
+  +---+
+  |   |
+  O   |
+  |   |
+      |
+      |
+=========
+  +---+
+  |   |
+  O   |
+ /|   |
+      |
+      |
+=========
+  +---+
+  |   |
+  O   |
+ /|\  |
+      |
+      |
+=========
+  +---+
+  |   |
+  O   |
+ /|\  |
+ /    |
+      |
+=========
+  +---+
+  |   |
+  O   |
+ /|\  |
+ / \  |
+      |
+=========

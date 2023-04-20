@@ -1,0 +1,52 @@
+Introduction
+    This specification describes `matrix`, a character device for manipulating square matrices. This specification is intended to form an API contract between users and implementers of the character device.
+    Throughout this specification, the key words "MUST" and "SHALL" are to be interpreted as described in [RFC 2119 - Key words for use in RFCs to Indicate Requirement Levels](https://www.ietf.org/rfc/rfc2119.txt).
+    Some constants used in this specification are defined in the accompanying header file.
+    Some language in this specification is purely informative, and not part of the API of `matrix`. Such language is marked with "Note: ".
+    Note: Now, enjoy the specification.
+
+Device File
+    A character device with name `matrix` MUST exist in the top level of the devtmpfs filesystem.
+    Note: On most systems, devtmpfs is mounted at `/dev`.
+    The device file's mode MUST be octal 0666. The file's major and minor number are unspecified.
+
+Device File State
+    This specification perscribes no persistent state associated with the device file itself.
+
+Open File Description State
+    From the perspective of applications, open file descriptions[0] associated with the device file MUST logically contain the following state:
+    - A square matrix of bytes; Initially of size 1x1, and containing a zero byte.
+    - A file position, refering to an element of the matrix; Initially referring to the matrix's only element.
+    Note: The file position is a reference to an element of the matrix. It is not necessarily an integer, although implementations may internally represent the file position this way).
+
+Element Iteration Order
+    This section defines an order for elements in the matrix. This is done terms of cardinal directions (up/down, left/right) within the matrix. The plane of directions as used throughout this specification is independent from the rotation of the matrix. (See the MAT_IO_ROTATE ioctl operation, below.)
+    Element iteration order is defined by a 'next' element for every element of the matrix:
+        If the current element is the rightmost element of the bottom row, then the 'next' element is the leftmost element of the top row.
+        Otherwise, if the current element is the rightmost in it's row, the 'next' element is the leftmost element of the row below.
+        Otherwise, the 'next' element is the element to the right of the current element.
+    Note: It's like reading a sheet of paper, but you can wrap around to the begining of the document. This is sometimes called "row-major order".
+    API functions that return the index of an element of the matrix, where the index is defined by element iteration order, MUST return the smallest index of that element.
+    The top-left element of the matrix has element index 0.
+
+Open File Description Operations
+    Throughout this section, the arguments of system calls are referred to by thier names as they appear in the corresponding section 2 linux manual page.
+    Note: For example, in the context of the read syscall, 'count' refers to the system call's third argument, because that's what `man 2 read` calls it.
+
+    Once created in the usual way, open file descriptions SHALL support the following operations:
+        Read:
+            The system call SHALL read the next 'count' elements of the matrix into 'buf', starting at the element referred to by the file position, and advancing the file position by 'count' elements in element iteration order. The call MUST return 'count'.
+        Write:
+            The system call SHALL write 'count' bytes from 'buf' into successive elements of the matrix in element iteration order, starting at the element referred to by the file position, and advancing the file position by 'count' elements. If the call would specify multiple assignments to the same matrix element (ie. 'count' is greater than the number of elements), the byte with a larger index in 'buf' takes precedence. The call MUST return 'count'.
+        Seek:
+            If 'whence' is SEEK_VERTICAL or SEEK_HORIZONTAL, then the file position SHALL move downwards or rightwards, respectively, by 'offset' elements, wrapping around the edges of the matrix as necessary. The system call SHALL return the new file position index (in terms of element iteration order).
+            Otherwise, the system call SHALL return -EINVAL.
+            Note: Neither seek modes accept matrix indices in element iteration order.
+        Ioctl:
+            If 'request' is MAT_IO_RESIZE, then the third argument, 'arg', SHALL be interpreted as an `unsigned long`. If 'arg' is zero, then the system call SHALL return -EINVAL. Otherwise, the implementation MUST resize the matrix to size 'arg'x'arg', discarding existing data and filling the matrix with zero bytes. The call SHALL set the file position to refer to the top-left element of the matrix. The call SHALL return 0 if operation succeeded, and an appropriate error code otherwise.
+            If 'request' is MAT_IO_ROTATE, then the third argument, 'arg', SHALL be interpreted as a `signed long`. The implementation MUST rotate the matrix clockwise 'arg' times. After this operation, the file position MUST refer to the same element of the matrix. The system call MUST return the new file position index in terms of element iteration order.
+            Note: During rotation operations, the file position does not change, but the index of the element it refers to may change. For example, if the file position refers to the element in the top-right corner of the matrix, and the matrix is rotated clockwise once, then the file position must refer to the element in the bottom-right corner of the matrix - the same element, now at a different position.
+            The system call MUST return -EINVAL if 'request' is not MAT_IO_RESIZE or MAT_IO_ROTATE.
+
+Footnotes
+[0] - For a definition of open file descriptions, see the open(2) manual page.

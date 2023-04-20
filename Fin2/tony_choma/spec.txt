@@ -1,0 +1,45 @@
+Caesars Cipher Character Device
+
+This character device will support the Caesars Cipher, taking a message from the user and encrypting it using a simple algorithm.
+
+The algorithm known as the Caesars Cipher take each letter in a message and replaces it with a fixed number of positions down the alphabet (very simple form of encryption).
+
+The character device will show up in '/dev/' as a special character device file named 'caesars_cipher'. All users can interact with the file and the state of the file is shared between all open file descriptor.
+
+The special character device file supports the following operations: open, close, read, write, lseek, ioctl.
+
+Operations:
+	- Open:
+		- The open system call is used to open a file that will be used for encryption and decryption.
+		- The file should be opened in read and write mode.
+		- The return value of this system call is a file descriptor, which is a non-negative integer that identifies the file in the following operations to come.
+
+	- Read:
+		- The read system call is used to read data from the file into a memory buffer.
+		- The return value of this system call is the number of bytes that are read.
+		- The read system call should be used to read the data to be encrypted.
+
+	- Write:
+		- The write system call is used to write data from a buffer into the memory of the file.
+		- The return value of this system call is the number of bytes written.
+		- The write system call should be used to write the encrypted data back to the file.
+
+	- Close:
+		- The close system call is used to close the file and release the proper resources.
+		- It takes a file descriptor as input and returns zero on success.
+		- All open file descriptors should be closed when they are no longer needed.
+
+	- lseek:
+		- The lseek system call is used to change the current position in the file.
+		- It takes three arguments: the file descriptor, the offset, and the origin.
+		- The offset is the number of bytes to move the file pointer, and the origin can be one of these values below:
+			- SEEK_SET (set the position to the offset).
+			- SEEK_CUR (set the position to the current position plus the offset).
+			- SEEK_END (set the position to the end of the file plus the offset).
+			- The return value of this system call is the new file position.
+
+	- ioctl:
+		- The ioctl system call is to be used to set the number of positions down the alphabet that each letter should be shifted in the Caesar cipher.
+		- The ioctl system call takes three arguments: the file descriptor, the request code, and a pointer to an argument.
+		- The request code specifies the operation to be performed, and the argument is a pointer to a buffer that contains any necessary data.
+		- The return value of this system call is zero on success.

@@ -1,0 +1,53 @@
+My character device
+
+This driver implements a character device that allows the user to convert messages from plaintext to Morse code and vice versa. The device exposes an interface for reading and writing data, allowing userspace programs to interact with it.
+
+The character device will show up in '/dev/morse' as a character deive file named 'morse'.
+
+The Morse code encoding is based on a sequence of dots and dashes that represent individual letters, numbers, and special characters. Each dot is represented as a short signal, and each dash is represented as a long signal. The time duration of a dot is typically defined as the base unit of time for the Morse code transmission, and the duration of a dash is usually three times that of a dot.
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Operations:
+
+Open
+
+ - The open operation initializes the device and prepares it for use. It takes no arguments and returns 0 on success, or a negative error code otherwise.
+
+Read
+
+ - Reads from message device buffer in the Morse Code Converter device file and writes either the message encrypted in Morse code, or the message in plaintext(depending on ioctl) to the provided buffer.
+Note - By default the mode should be conversion from plaintext to morse
+
+ - It returns the number of characters written to the buffer on success and a negative value will be returned to indicate the error.
+
+Write
+
+ - The write operation converts either plaintext messages into Morse code or vice versa. It will convert and store both messages in separate buffers in the device replacing the old ones stored there.
+The device should switch between the 2 buffers depending on the ioctl value.
+
+ - It should check for characters that Morse doesn't support and return a negative value or -EINVAL
+
+ - It takes a buffer and a length as arguments, and writes up to length bytes of Morse code data to the device from the buffer. The operation returns the number of bytes written, or a negative error code on failure.
+
+Seek
+
+ - The seek operation of the Morse code character device will allow the user to move the file position to a specific location within the device file. Updating the value of file position based on 'offset' and 'whence'.
+
+ - The operation should actually return an error of a negative number when lseek is called on the driver when it is in Morse mode because it would mess up the morse to something probably unreadable.
+
+ - If the resulting position would be outside of the bounds of the file, '-EINVAL' is returned, otherwise the file position is set to the target location and that offset is returned.
+
+ - The Morse Code Converter device file supports the following values for whence:
+
+    -SEEK_SET: Set the current position to offset bytes from the beginning of the message.
+    -SEEK_CUR: Set the current position to the current position plus offset.
+    -SEEK_END: Set the current position to the end of the message plus offset.
+
+Ioctl
+
+ - Three commands can be specified, otherwise '-EINVAL' is returned.
+
+ - IOCTL_MORSE_SET_PLAIN: Set the device to plaintext output mode. This will cause any subsequent read calls to return the plaintext input that was written to the device, rather than the Morse code equivalent. This ioctl takes no argument. Returns 0 on success, or a negative error code on failure.
+
+ - IOCTL_MORSE_SET_MORSE: Set the device to Morse code output mode. This will cause any subsequent read calls to return the Morse code equivalent of the plaintext input that was written to the device. This ioctl takes no argument. Returns 0 on success, or a negative error code on failure.
+
+ - IOCTL_MORSE_RESET: Reset the device to its initial state, clearing any stored data and restoring default settings. This ioctl takes no argument. Returns 0 on success, or a negative error code on failure.

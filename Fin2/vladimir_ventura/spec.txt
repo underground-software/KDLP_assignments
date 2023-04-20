@@ -1,0 +1,51 @@
+Calculator character device
+
+This character device will do basic arithmetic (+, -, *, / (integer division)) on two entered integers.
+
+The character device will show up in '/dev/' as a special character device file named 'calc'.  All users can interact with the file and the state of the file is shared between all open file descriptors.
+
+The special character device file supports following operations: open, close, read, write, lseek, ioctl.
+
+When the kernel module is loaded, the driver should start in a state as if it is set to perform + as the operator for the aritmatic.
+
+Operations:
+	-Open:
+		- Opens calculator device in a state where result will be cleared and operator is set to +
+		- Returns 0 on sucess
+	-Read:
+		- Calc result of what is stored in the device string.
+		- Read back result into the device.
+			- Show result of arithemtics / Complete mathmatical statment.
+		- If the read is successful, the nonnegative number of bytes copied will be returned, and the file position will be advanced by that many bytes, otherwise a negative error will be return to indicate what was wrong.
+	-Write:
+		- Update the result string stored in the device
+			- Retrieve integers from user (IE 2 4)
+					- Place operators and operand into device to be calculated
+		-Will have to check for correct format of (number space number)
+			- No number can be 0 to save from divide by 0 error
+				-Will ignore any extra information when writing to the driver past the 2nd number
+		- If any of these errors happen an error will be returned.
+		- If the write is successful, the nonnegative number of bytes copied will be returned, otherwise a negatice error will be returned to indicate what went wrong.
+	-Ioctl:
+		- Change the expression type (+, -, *, /)
+			-4 commands can be specified, otherwise '-EINVAL' is returned.
+		- 'IOC_CALC_ADD' (macro with value of '_IO(0x11, 0)')
+			- Takes no arguments, returns 0 if succesful, otherwise a negative error will be returned to indicate what went wrong.
+			- Set operator to be addition
+		- 'IOC_CALC_SUB' (macro with value of '_IO(0x11, 1)')
+			- Takes no arguments, returns 0 if succesful, otherwise a negative error will be returned to indicate what went wrong.
+			- Set operator to be subtraction
+		- 'IOC_CALC_MULT' (macro with value of '_IO(0x11, 2)')
+			- Takes no arguments, returns 0 if succesful, otherwise a negative error will be returned to indicate what went wrong.
+			- Set operator to be multiplication
+		- 'IOC_CALC_DIV' (macro with value of '_IO(0x11, 3)')
+			- Takes no arguments, returns 0 if succesful, otherwise a negative error will be returned to indicate what went wrong.
+			- Set operator to be divison
+		- 'IOC_CALC_RESET' (macro with value of '_IO(0x11, 4')
+			- Takes no arguemnts, returns 0 if suceesful, otherwise a negative error will be returned to indicated what went wrong
+			- Reset to initial state and clear string set operator to +
+	-Seek:
+		- Update the value of the file position of based on offset and whence.
+		- If the resulting position would be outside of the file, '-EINVAL' is returned, otherwise the file position is set to the target location and the offset is returned.
+	-Close:
+		- Resets device to its initial state

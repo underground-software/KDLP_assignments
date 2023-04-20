@@ -1,0 +1,92 @@
+Pig Latin Character Device
+
+The character driver will take input messages from the user and encode the message into pig latin.
+Both the original input and the current translation are stored in the device.
+This character driver does not support compound words.
+
+The rules of encoding may be found at:
+
+https://reference.yourdictionary.com/resources/how-to-speak-pig-latin-basic-rules.html
+
+Writing a new message will overwrite the previous message and stored original input.
+
+The character device will show up in '/dev/' as a special character
+device file named 'igpay'. All users can interact with this file.
+The state of the file is shared between all open file descriptors.
+
+The special character device file supports the following operations:
+	- open
+	- close
+	- read
+	- write
+	- lseek
+	- ioctl
+
+The device state is that of an empty string upon load.
+
+Open:
+	- Opens the device in the state it was last left in.
+
+Close:
+	- Leaves the device in the current state.
+
+Read:
+	- Reads the most recently encoded string in the device.
+	- Returns the number of bytes read.
+	- The file position is advanced by as many bytes as returned.
+	- Returns a negative value on error.
+
+Seek:
+	- Update the file position within the message.
+	- Returns the file position on success.
+	- Returns a negative value on error.
+
+Write:
+	- Write a new string into the device for translation
+	- The string is encoded as pig latin when it is stored in the
+	  device.
+	- The original string is stored until a new string is written.
+	- The file position is reset to 0.
+	- Returns the number of bytes written on success.
+	- Returns a negative value on error.
+
+Ioctl:
+	- The below commands are supported.
+	- Unsupported commands return '-EINVAL'.
+	- 'IOC_PIG_ENCODE_MSG': (macro with value of '_IO(0x11, 0)')
+		- Performs pig latin encoding on the encoded message.
+		- Takes no arguments.
+		- Returns 0 on success.
+		- Returns a negative value on error.
+
+	- 'IOC_PIG_GET_ORIG': (macro with value of '_IOR(0x11, 1, void *)'
+		- Retrieve the initial message input into the device
+		  for the current encoded message.
+		- Takes an address to a 'struct pig_ioctl_args'. The buff field in
+		  'struct pig_ioctl_args' must be initialized to a non NULL value and the associated
+		  size value must be initialized to the length of the buffer.
+		- The original input value is returned through buff field in the 'struct
+		  pig_ioctl_args'.
+		- Returns 0 on success.
+		- Returns a negative value on error.
+
+	- 'IOC_PIG_RESET' (macro with value of '_IO(0x11, 2)')
+		- Reset the device to its initial state.
+		- Clears the number of translations performed by the device.
+		- Takes no arguments.
+		- Returns 0 if successful.
+		- Returns a negative value on error.
+
+	- 'IOC_PIG_MSG_LEN': (macro with value of '_IOR(0x11, 3, size_t)'
+		- Retrieve the length of the currently encoded message.
+		- Takes the address of a 'size_t' as an argument. The
+		  length of the string is provided via this pointer.
+		- Returns 0 if successful.
+		- Returns a negative value on error.
+
+	- 'IOC_PIG_NUM_TRANS: (macro with value of '_IOR(0x11, 4, size_t)'
+		- Retrieves the number of translations performed by the device since last reset.
+		- Takes the address of a 'size_t' as an argument.
+		- The number of translations is returned through the argument.
+		- Returns 0 if successful.
+		- Returns a negative value on error.

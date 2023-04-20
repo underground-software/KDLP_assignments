@@ -1,0 +1,94 @@
+This driver implements a character device for playing hangman against the
+kernel. The word(s) list from which the kernel selects from is up to you to
+generate. You may make it as short (the kernel only knows one word) or as
+long (the kernel knows the entire dictionary) as your will and determination
+allow. When the driver is loaded, a word will be selected for a new game. The
+user will have len(word) * 2 guesses to guess the secret word the kernel is
+thinking of. Below are descriptions of what the driver functions should
+implement.
+
+* For the sake of testing, the secret word should be hardcoded as "kernel" *
+* The test file will operate under this assumption *
+
+The device should be located at /dev/hangman
+
+Open:
+- Initializes internal structure required for the programmer
+	- returns 0 on success, or an appropriate negative error code otherwise
+
+Read:
+- Show current gamestate.
+	- The gamestate includes the secret word reprented as underscores for
+		letters the user hasn't guessed and letters for those
+		that the user has successfully guessed.
+	- The gamestate also includes the number of guesses remaining before the
+		user has lost.
+	- The initial gamestate for the test file would be:
+		______
+		12 Guesses Remaining
+	- If the user guesses 'k' the state would then be:
+		k_____
+		12 Guesses Remaining
+	- If the user guesses 'e' the state would then be:
+		ke__e_
+		12 Guesses Remaining
+	- If the user guesses 'z' the state would then be:
+		ke__e_
+		11 Guesses Remaining
+	- If the user makes 11 more incorrect guesses, the game is over,
+	  and the state would then be:
+		kernel
+		Game Over!
+	- If the user correctly guesses the whole word, the state would then be:
+		kernel
+		You Win!
+	- The test file depends on this exact syntax.
+- Read returns the number of bytes read on success, or an appropriate negative
+	error code otherwise
+
+- If the game is over, and a new one hasn't been started, the final
+	gamestate should be reflected by Read until a new game is
+	started.
+
+- Read should advance the file position by the number of bytes read
+
+Write:
+- Guess a letter.
+	- Make sure the secret word is all lower case and convert alphabetical
+		guesses to lowercase.
+	- If the user chooses to guess non-alphabetical ascii characters,
+		allow it - "Never interrupt your enemy when he is making a
+		mistake" - The Linux Kernel (2023).
+
+- On success write returns the number of bytes written, otherwise an appropriate
+	negative error code
+- Write should advance the file position by the number of bytes written
+
+Seek:
+- Seek should adjust the file postion allowing the user to isolate the reading
+	one line of gamestate information.
+
+Ioctl:
+- Accepts the following commands:
+	- New game: this is a valid command when the game is over, and the
+		current gamestate is the 'final gamestate' (see read). Starting
+		a new game will have the kernel select a new secret word, reset
+		the number of guesses to two times the length of the new secret
+		word, and reset the game's representation of the secret word to
+		all underscores.
+		- represented by IOC_NEW_GAME, a macro _IO(0x11, 0)
+		- Returns 0 on success, or an appropriate negative error code
+			otherwise
+	- Surrender: this command changes the gamestate to reveal the secret
+		word and indicate that the user has lost. Upon surrendering,
+		the gamestate is final until a new game is initiated.
+		- represented by IOC_SURRENDER, a macro _IO(0x11, 1)
+		- Returns 0 on success, or an appropriate negative error code
+			otherwise
+- If the user provides an invalid command, return an appropriate negative error
+	code
+
+Close:
+- Performs any cleanup necesarry with respect to the lifecycle of the device,
+	freeing any resources that were allocated by the programmer.
+- Returns 0 on success and an appropriate negative error code otherwise.

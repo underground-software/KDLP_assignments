@@ -1,4 +1,4 @@
-# Mid 2 🤷‍♀️
-## Writing some actual kernel code at last
+# Fin 2 🤷‍♀️
+## Doing something cool at last
 
 🕴️
